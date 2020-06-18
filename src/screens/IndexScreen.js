@@ -1,15 +1,29 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, Button, TouchableOpacity } from 'react-native';
+import React, { useContext, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Context } from '../context/BlogContext';
 import { Feather } from '@expo/vector-icons'
 
 const IndexScreen = ({ navigation }) => {
-  const { state, addBlogPost, deleteBlogPost } = useContext(Context)
+  const { state, deleteBlogPost, getBlogPosts } = useContext(Context)
+
+  useEffect(() => {
+    //ngrok and jsonserver in another project
+    //first time arriving to screen run fetch
+    getBlogPosts();
+
+    //everytime this screen because the focus, fetch posts
+    //avoid memory leak and remove lisenter
+    const listener = navigation.addListener('didFocus', () => {
+      getBlogPosts()
+    });
+
+    return () => {
+      listener.remove();
+    };
+  }, [])
 
   return (
     <View>
-
-      <Button title="Add Post" onPress={addBlogPost} />
       <FlatList
         keyExtractor={(blogPost) => blogPost.title}
         data={state}
@@ -30,6 +44,17 @@ const IndexScreen = ({ navigation }) => {
     </View>
   );
 };
+
+//Plus icon on top right
+IndexScreen.navigationOptions = ({ navigation }) => {
+  return {
+    headerRight: () => (
+      <TouchableOpacity onPress={() => navigation.navigate('Create')}>
+        <Feather name="plus" size={30} />
+      </TouchableOpacity>
+    ),
+  };
+}
 
 const styles = StyleSheet.create({
   row: {
